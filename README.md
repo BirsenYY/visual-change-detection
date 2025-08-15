@@ -111,9 +111,21 @@ The comparison is a fast, pixel‑level diff implemented with OpenCV. High‑lev
 - `GET /comparison/{id}` — returns record (requires header)
 - `GET /comparisons?limit=10` — recent history (requires header)
 
+### Sample images (included)
+
+This repo includes three before/after pairs under `sample_images/`:
+sample_images/
+pair1-before.png
+pair1-after.png
+pair2-before.png
+pair2-after.png
+pair3-before.png
+pair3-after.png
+
+
 ### Sample cURL
 ```bash
-curl -H "X-API-Key: dev123" -X POST http://localhost:8000/comparison   -F "before=@sample_images/before.png"   -F "after=@sample_images/after.png"   -F "threshold=25"   -F 'ignore_json=[{"x":0.1,"y":0.1,"w":0.2,"h":0.1}]'
+curl -H "X-API-Key: dev123" -X POST http://localhost:8000/comparison   -F "before=@sample_images/pair1-before.png"   -F "after=@sample_images/pair1-after.png"   -F "threshold=25"   -F 'ignore_json=[{"x":0.1,"y":0.1,"w":0.2,"h":0.1}]'
 ```
 
 ---
@@ -126,13 +138,27 @@ curl -H "X-API-Key: dev123" -X POST http://localhost:8000/comparison   -F "befor
 
 ---
 
-## What I'd Improve With More Time
+## Limitations and Recommendations
 
-### Add automated backend tests for the comparison endpoint
-Currently, the project lacks unit tests to verify diff logic or API responses.
+### Testing
 
-**Suggested task**  
-Add backend comparison tests
+#### Backend — automated tests for the comparison endpoint
+There are currently no automated tests validating the image-diff logic or API responses.
+- **Add** a `pytest` suite using FastAPI’s `TestClient`.
+- **Cover** happy paths and edge cases: threshold sensitivity, ignore regions, size mismatch handling, and persistence of `metadata.json`.
+- **Assert** on status codes, response schema, and that expected files are written to `/data/<id>/`.
+
+#### Frontend — test harness and coverage
+Frontend tests are not configured; running `npm test` fails because no script is defined.
+- **Add** Vitest + React Testing Library.
+- **Cover** form validation (missing API key/files), 401 error messaging, slider→threshold mapping, and region-selection interactions.
+
+**Suggested task:** Establish backend and frontend test suites.
+
+### Preview rendering inconsistency
+“Before” and “After” previews can render at slightly different sizes even when source dimensions match. This stems from responsive layout constraints and `object-fit` behavior.
+
+**Planned fix:** Normalize preview containers in `App.tsx` (shared aspect ratio, identical wrapper dimensions, consistent padding/borders) to ensure pixel-aligned comparisons.
 
 ### Persist comparison records in a database instead of disk files
 The API stores metadata and images on disk, which limits scalability and concurrency.
