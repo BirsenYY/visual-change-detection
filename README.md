@@ -92,23 +92,17 @@ Currently, the project lacks unit tests to verify diff logic or API responses.
 **Suggested task**  
 Add backend comparison tests
 
-**Start task**
-
 ### Persist comparison records in a database instead of disk files
 The API stores metadata and images on disk, which limits scalability and concurrency.
 
 **Suggested task**  
 Use SQLite for comparison history
 
-**Start task**
-
 ### Improve frontend error handling and UX
 Errors are displayed as plain text; there’s no global toast or retry mechanism.
 
 **Suggested task**  
 Enhance frontend error UI
-
-**Start task**
 
 ---
 
