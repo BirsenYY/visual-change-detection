@@ -137,6 +137,21 @@ curl -H "X-API-Key: dev123" -X POST http://localhost:8000/comparison   -F "befor
 - Users have network access to install dependencies and retrieve packages.
 
 ---
+## Known Issues
+
+### Preview rendering inconsistency
+“Before” and “After” previews can render at slightly different sizes even when source dimensions match. This stems from responsive layout constraints and `object-fit` behavior.
+
+**Planned fix:** Normalize preview containers in `App.tsx` (shared aspect ratio, identical wrapper dimensions, consistent padding/borders) to ensure pixel-aligned comparisons.
+
+### Harden CORS configuration for authenticated API
+backend/app.py permits wildcard origins ("*"), yet allow_credentials=True is enabled, exposing authenticated endpoints to arbitrary domains.
+
+### Blocking file reads and unclosed uploads in _read_image
+_read_image reads UploadFile.file synchronously and never closes the handle, potentially blocking the event loop and leaking resources.
+
+### ignore_json rectangles lack validation
+Only the outer JSON array is validated; individual rectangles may contain non‑numeric or out‑of‑range fields, causing runtime errors in _apply_ignore_rects
 
 ## Limitations and Recommendations
 
@@ -154,11 +169,6 @@ Frontend tests are not configured; running `npm test` fails because no script is
 - **Cover** form validation (missing API key/files), 401 error messaging, slider→threshold mapping, and region-selection interactions.
 
 **Suggested task:** Establish backend and frontend test suites.
-
-### Preview rendering inconsistency
-“Before” and “After” previews can render at slightly different sizes even when source dimensions match. This stems from responsive layout constraints and `object-fit` behavior.
-
-**Planned fix:** Normalize preview containers in `App.tsx` (shared aspect ratio, identical wrapper dimensions, consistent padding/borders) to ensure pixel-aligned comparisons.
 
 ### Persist comparison records in a database instead of disk files
 The API stores metadata and images on disk, which limits scalability and concurrency.
