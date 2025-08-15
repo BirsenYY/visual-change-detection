@@ -60,6 +60,48 @@ export VITE_API_BASE=http://localhost:8000
 
 ---
 
+## How the visual diff works
+The comparison is a fast, pixel‑level diff implemented with OpenCV. High‑level steps:
+
+1. **Load & align**
+   - Decode both images as 8‑bit BGR.
+   - If sizes differ, resize the *after* image to match the *before* image using area resampling so a 1:1 pixel comparison is possible.
+
+2. **Per‑pixel difference**
+   - Compute absolute difference per channel: `absdiff = cv2.absdiff(before, after)`.
+   - Collapse to a single intensity map: `gray = cv2.cvtColor(absdiff, cv2.COLOR_BGR2GRAY)`.
+
+3. **Sensitivity / thresholding**
+   - The UI slider **0–100** maps to an OpenCV threshold **0–255** (lower = more sensitive).
+   - We binarize: `mask = gray >= threshold` (via `cv2.threshold(..., THRESH_BINARY)`).
+   - Result: `mask` is **255** for changed pixels, **0** otherwise.
+
+4. **Noise cleanup**
+   - Apply a light morphological **open** (3×3 kernel, 1 pass) to remove single‑pixel specks.
+
+5. **Ignore regions** (optional)
+   - The frontend lets you draw rectangles on the *Before* image; these are sent as normalized `{x,y,w,h}` in **[0..1]**.
+   - On the server, we scale those to pixels and set `mask[y1:y2, x1:x2] = 0` so they don’t count as changes.
+
+6. **Difference score**
+   - `difference_percent = (countNonZero(mask) / (H×W)) × 100` and rounded to 4 decimals.
+   - Interprets “how much of the image changed,” after thresholding & ignores.
+
+7. **Visualization**
+   - Build a red overlay where `mask==255` and alpha‑blend onto the *after* image: `vis = addWeighted(after, 0.7, redOverlay, 0.3, 0)`.
+   - The API returns both the **binary mask** and the **diff overlay**.
+
+**Why this approach?**
+- It’s **O(N)** over pixels, simple, and predictable for UI screenshots.
+- The threshold knob lets you suppress tiny antialiasing/text rendering changes.
+
+**Limitations & tips**
+- Very small sub‑pixel/antialias changes can still light up at low thresholds → increase sensitivity (higher threshold) or draw ignore regions.
+- Dynamic content (timestamps/cursors/ads) should be ignored using rectangles.
+- For perceptual similarity (less sensitive to tiny shifts), a future upgrade could add **SSIM** or a multi‑scale/blurred comparison.
+
+---
+
 ## API
 - `POST /comparison` — multipart form fields:
   - `before` (file), `after` (file)
