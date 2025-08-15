@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Node (frontend)
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+
+# Python (backend)
+backend/__pycache__/
+backend/.pytest_cache/
+**/*.pyc
+
+# Generated comparison data (images + metadata)
+backend/data/
+!backend/data/.gitkeep
+
+# Environment files / secrets
+**/.env
+**/.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editors/IDEs
+.vscode/
+.idea/
